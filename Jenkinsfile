@@ -1,5 +1,6 @@
 pipeline {
     agent any
+    label 'pod-slave'
     environment {
       dockerImage = ''
       registry = 'mitrasonu/nginx-alpine'
