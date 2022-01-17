@@ -1,33 +1,39 @@
-node {
-    def cicd
-
-    stage('Clone repository') {
-        /* Cloning the Repository to our Workspace /var/lib/jenkins/workspace/jobname*/
-
-        checkout scm
+pipeline {
+    agent any
+    environment {
+      dockerImage = ''
+      registry = 'mitrasonu/nginx-alpine'
+      registryCredential = 'docker-login'
     }
-
-    stage('Build image') {
-        /* This builds the actual image from Docker File */
-
-        cicd = docker.build("mitrasonu/webimg")
-    }
-
-    stage('Test image') {
-        
-        cicd.inside {
-            echo "Tests Passed Continous Delivery to Docker push"
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/sonulodha/app.git']]])
+            }
         }
+        stage('Docker Build Image') {
+                steps {
+                    script {
+                        dockerImage = docker.build registry
+                    }
+                }
+            }
+        stage('Docker Push Image'){
+            steps {
+                script {
+                        docker.withRegistry('',registryCredential) {
+                        dockerImage.push()
+                    }
+                }
+            }
+        }
+   
+        stage('Deploy App') {
+            steps {
+                script {
+                        kubernetesDeploy(configs: "nginx-deployment.yaml", kubeconfigId: "mykubeconfig")
+        }
+      }
     }
-
-    stage('Push image') {
-        /* 
-			You would need to first register with DockerHub before you can push images to your account
-		*/
-        docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-login') {
-            cicd.push("${env.BUILD_NUMBER}")
-            cicd.push("latest")
-            } 
-                echo "Trying to Push Docker Build to DockerHub"
     }
 }
