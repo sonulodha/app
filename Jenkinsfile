@@ -1,6 +1,6 @@
 pipeline {
     agent {
-    label 'agent-pod'
+    label 'compute'
 }
     
     environment {
