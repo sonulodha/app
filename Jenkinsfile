@@ -1,11 +1,11 @@
 pipeline {
     agent {
-    label 'compute'
+    label 'agent-pod'
 }
     
     environment {
       dockerImage = ''
-      registry = 'mitrasonu/nginx-alpine'
+      registry = 'mitrasonu/nginx-1alpine'
       registryCredential = 'docker-login'
     }
     stages {
